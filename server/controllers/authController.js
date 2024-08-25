@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
+const verifyToken = require("../middleware/authMiddleware");
 
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -13,9 +14,11 @@ exports.register = async (req, res) => {
     const tokens = generateToken(user);
     console.log(tokens);
 
-    res.cookie("token", tokens.token, { httpOnly: true });
-    res.cookie("refreshToken", tokens.refreshToken, { httpOnly: true });
-
+    res.cookie("token", tokens.token, {
+      httpOnly: true,
+      sameSite: "Lax", // Change to "Lax" to be less restrictive
+      secure: false, // False for development
+    });
     res.status(201).json({ user, token: tokens.token });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -32,9 +35,13 @@ exports.login = async (req, res) => {
     }
 
     const tokens = generateToken(user);
+    console.log(tokens);
 
-    res.cookie("token", tokens.token, { httpOnly: true });
-    res.cookie("refreshToken", tokens.refreshToken, { httpOnly: true });
+    res.cookie("token", tokens.token, {
+      httpOnly: true,
+      sameSite: "Lax", // Change to "Lax" to be less restrictive
+      secure: false, // False for development
+    });
 
     res.status(200).json({ user, token: tokens.token });
   } catch (error) {
@@ -67,4 +74,19 @@ exports.refreshToken = (req, res) => {
   } catch (error) {
     res.status(403).json({ message: "Invalid refresh token" });
   }
+};
+
+exports.checkToken = (req, res) => {
+  console.log("Request received, checking token...");
+  console.log("Cookies: ", req.cookies);
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2Y2IwY2U0MWRkZWJmOTc5MGI0MjQ0ZSIsInVzZXJuYW1lIjoidGVqdSIsImlhdCI6MTcyNDU4NzIzMCwiZXhwIjoxNzI0NTkwODMwfQ.I0BcRWCsdKX_zW0_tg66UsNyzax8EaCsA7BAOhKZCRw";
+  console.log("Token:", token);
+
+  if (!token) {
+    console.log("No token found, returning unauthorized");
+    return res.status(401).json({ isAuthenticated: false });
+  }
+
+  res.json({ isAuthenticated: true });
 };

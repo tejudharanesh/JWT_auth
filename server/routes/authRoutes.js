@@ -4,6 +4,7 @@ const {
   login,
   logout,
   refreshToken,
+  checkToken,
 } = require("../controllers/authController");
 const verifyToken = require("../middleware/authMiddleware");
 
@@ -13,6 +14,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.post("/refresh-token", refreshToken);
+router.get("/check", checkToken);
 
 router.get("/protected", verifyToken, (req, res) => {
   res.status(200).json({ message: "Protected route accessed" });
